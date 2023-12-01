@@ -11,18 +11,28 @@ interface Album {
 
 const Albums: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filteredAlbums, setFilteredAlbums] = useState<Album[]>([]);
 
   useEffect(() => {
     const fetchAllAlbums = async () => {
       try {
         const res = await axios.get<Album[]>("http://localhost:8800/albums");
         setAlbums(res.data);
+        setFilteredAlbums(res.data);
       } catch (err) {
         console.log(err);
       }
     };
     fetchAllAlbums();
   }, []);
+
+  useEffect(() => {
+    const filtered = albums.filter((album) =>
+      album.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredAlbums(filtered);
+  }, [searchQuery, albums]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -36,8 +46,15 @@ const Albums: React.FC = () => {
   return (
     <div>
       <h1>アルバムコレクション</h1>
+      <input className="search"
+        type="text"
+        placeholder="アルバムを検索"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+      
       <div className="albums">
-        {albums.map((album) => (
+        {filteredAlbums.map((album) => (
           <div key={album.id} className="album">
             <img src={album.cover} alt="" />
             <h2>{album.title}</h2>
